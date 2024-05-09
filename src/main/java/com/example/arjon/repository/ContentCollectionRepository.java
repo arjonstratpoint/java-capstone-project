@@ -18,7 +18,7 @@ public class ContentCollectionRepository {
     public ContentCollectionRepository() {
     }
 
-    public List<Content> finalAll() {
+    public List<Content> findAll() {
         return contentList;
     }
 
