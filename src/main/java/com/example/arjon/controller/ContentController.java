@@ -1,7 +1,6 @@
 package com.example.arjon.controller;
 
 import com.example.arjon.model.Content;
-import com.example.arjon.repository.ContentCollectionRepository;
 import com.example.arjon.repository.ContentRepository;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
