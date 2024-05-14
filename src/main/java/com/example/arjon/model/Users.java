@@ -9,10 +9,9 @@ public record Users(
         Integer id,
         String userName,
         String password,
-        String email,
         LocalDateTime dateCreated
 ) {
-        public Users(String userName, String password, String email) {
-                this(null, userName, password, email, LocalDateTime.now());
+        public Users(String userName, String password) {
+                this(null, userName, password, LocalDateTime.now());
         }
 }

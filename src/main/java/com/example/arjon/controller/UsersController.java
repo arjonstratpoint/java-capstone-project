@@ -19,7 +19,7 @@ public class UsersController {
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/registration")
     public void registration(@RequestBody UserRequest userRequest) {
-        Users users = new Users(userRequest.userName(), userRequest.password(), userRequest.email());
+        Users users = new Users(userRequest.userName(), userRequest.password());
         userRepository.save(users);
     }
 }

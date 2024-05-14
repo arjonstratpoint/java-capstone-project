@@ -6,8 +6,6 @@ public record UserRequest(
         @NotBlank
         String userName,
         @NotBlank
-        String password,
-        @NotBlank
-        String email
+        String password
 ) {
 }
