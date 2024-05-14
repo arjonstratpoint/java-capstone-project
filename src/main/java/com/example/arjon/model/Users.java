@@ -4,7 +4,7 @@ import org.springframework.data.annotation.Id;
 
 import java.time.LocalDateTime;
 
-public record User(
+public record Users(
         @Id
         Integer id,
         String userName,
@@ -12,4 +12,7 @@ public record User(
         String email,
         LocalDateTime dateCreated
 ) {
+        public Users(String userName, String password, String email) {
+                this(null, userName, password, email, LocalDateTime.now());
+        }
 }

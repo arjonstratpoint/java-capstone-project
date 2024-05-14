@@ -1,7 +1,7 @@
 package com.example.arjon.repository;
 
-import com.example.arjon.model.User;
+import com.example.arjon.model.Users;
 import org.springframework.data.repository.CrudRepository;
 
-public interface UserRepository extends CrudRepository<User, Integer> {
+public interface UserRepository extends CrudRepository<Users, Integer> {
 }
