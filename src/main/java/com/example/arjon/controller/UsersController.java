@@ -3,9 +3,9 @@ package com.example.arjon.controller;
 import com.example.arjon.model.Users;
 import com.example.arjon.model.request.UserRequest;
 import com.example.arjon.repository.UserRepository;
+import com.example.arjon.util.PasswordSecurity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
@@ -15,9 +15,9 @@ import java.util.Optional;
 public class UsersController {
 
     private final UserRepository userRepository;
-    private final BCryptPasswordEncoder bCryptPasswordEncoder;
+    private final PasswordSecurity bCryptPasswordEncoder;
 
-    public UsersController(UserRepository userRepository, BCryptPasswordEncoder bCryptPasswordEncoder) {
+    public UsersController(UserRepository userRepository, PasswordSecurity bCryptPasswordEncoder) {
         this.userRepository = userRepository;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
     }
