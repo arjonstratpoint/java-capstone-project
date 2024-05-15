@@ -7,11 +7,11 @@ import java.time.LocalDateTime;
 public record Users(
         @Id
         Integer id,
-        String userName,
+        String username,
         String password,
         LocalDateTime dateCreated
 ) {
-        public Users(String userName, String password) {
-                this(null, userName, password, LocalDateTime.now());
+        public Users(String username, String password) {
+                this(null, username, password, LocalDateTime.now());
         }
 }
