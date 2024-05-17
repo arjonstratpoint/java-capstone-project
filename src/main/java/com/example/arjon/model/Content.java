@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 public record Content(
         @Id
         Integer id,
+        Integer userId,
         @NotBlank
         String title,
         @Column(value = "description")

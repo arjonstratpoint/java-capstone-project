@@ -26,7 +26,7 @@ public class CustomUserDetailsService implements UserDetailsService {
             User.UserBuilder builder = User.builder();
             builder.username(user.username());
             builder.password(user.password());
-            builder.roles("ADMIN");
+            builder.roles(user.role().toString());
             return builder.build();
         }else {
             throw new UsernameNotFoundException("User not found.");

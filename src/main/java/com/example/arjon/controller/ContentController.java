@@ -1,9 +1,14 @@
 package com.example.arjon.controller;
 
 import com.example.arjon.model.Content;
+import com.example.arjon.model.Users;
 import com.example.arjon.repository.ContentRepository;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -14,9 +19,11 @@ import java.util.List;
 public class ContentController {
 
     private final ContentRepository contentRepository;
+    private final AuthenticationManager authenticationManager;
 
-    public ContentController(ContentRepository contentRepository) {
+    public ContentController(ContentRepository contentRepository, AuthenticationManager authenticationManager) {
         this.contentRepository = contentRepository;
+        this.authenticationManager = authenticationManager;
     }
 
     @GetMapping
@@ -31,8 +38,13 @@ public class ContentController {
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
-    public void create(@Valid @RequestBody Content content) {
-        contentRepository.save(content);
+    public String  create(@Valid @RequestBody Content content) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (!(authentication instanceof AnonymousAuthenticationToken)) {
+            return authentication.getName();
+        }
+        return "Not authenticated";
+//        contentRepository.save(content);
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)

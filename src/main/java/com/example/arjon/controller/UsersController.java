@@ -4,12 +4,13 @@ import com.example.arjon.model.Users;
 import com.example.arjon.model.request.UserRequest;
 import com.example.arjon.repository.UserRepository;
 import com.example.arjon.service.TokenService;
-import com.example.arjon.util.PasswordSecurity;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
@@ -19,13 +20,14 @@ import java.util.Optional;
 public class UsersController {
 
     private final UserRepository userRepository;
-    private final PasswordSecurity bCryptPasswordEncoder;
+    @Autowired
+    private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final TokenService tokenService;
 
-    public UsersController(UserRepository userRepository, PasswordSecurity bCryptPasswordEncoder, AuthenticationManager authenticationManager, TokenService tokenService) {
+    public UsersController(UserRepository userRepository, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, TokenService tokenService) {
         this.userRepository = userRepository;
-        this.bCryptPasswordEncoder = bCryptPasswordEncoder;
+        this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
         this.tokenService = tokenService;
     }
@@ -47,7 +49,7 @@ public class UsersController {
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/registration")
     public void registration(@RequestBody UserRequest userRequest) {
-        String encryptedPassword = bCryptPasswordEncoder.encode(userRequest.password());
+        String encryptedPassword = passwordEncoder.encode(userRequest.password());
         Users users = new Users(userRequest.username(), encryptedPassword);
         userRepository.save(users);
     }
