@@ -31,12 +31,14 @@ public class ContentController {
 
     @GetMapping
     public List<Content> findAll() {
-        return contentRepository.findAll();
+        Integer userId = authenticationFacade.getUserIdFromAuthentication();
+        return contentRepository.findAll(userId);
     }
 
     @GetMapping("{id}")
     public Content findById(@PathVariable Integer id) {
-        return contentRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Content not found"));
+        Integer userId = authenticationFacade.getUserIdFromAuthentication();
+        return contentRepository.findById(userId, id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Content not found"));
     }
 
     @ResponseStatus(HttpStatus.CREATED)
@@ -71,11 +73,13 @@ public class ContentController {
 
     @GetMapping("/filter/{keyword}")
     public List<Content> findByTitle(@PathVariable  String keyword) {
-        return contentRepository.findAllByTitleContains(keyword);
+        Integer userId = authenticationFacade.getUserIdFromAuthentication();
+        return contentRepository.findAllByTitleContains(userId, "%"+keyword+"%");
     }
     @GetMapping("/filter/status/{status}")
     public List<Content> findByStatus(@PathVariable  String status) {
-        return contentRepository.findByStatus(status);
+        Integer userId = authenticationFacade.getUserIdFromAuthentication();
+        return contentRepository.findByStatus(userId, status);
     }
 
 }
