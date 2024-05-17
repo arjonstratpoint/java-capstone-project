@@ -10,7 +10,6 @@ public record Content(
         @Id
         Integer id,
         Integer userId,
-        @NotBlank
         String title,
         @Column(value = "description")
         String desc,
@@ -20,4 +19,7 @@ public record Content(
         LocalDateTime dateUpdated,
         String url
 ) {
+        public Content(Integer userId, String title, String desc, Status status, Type contentType, String url) {
+                this(null,userId, title, desc, status, contentType, LocalDateTime.now(), null, url);
+        }
 }
