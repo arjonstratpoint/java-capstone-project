@@ -23,7 +23,9 @@ public class TokenService {
         Instant now = Instant.now();
         String scope = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
-                .collect(Collectors.joining(" "));
+                .collect(Collectors.joining(" "))
+                // Need to remove prefix "ROLE_" from role authorities for @PreAuthorize SCOLE_ADMIN to work
+                .substring(5);
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuer("self")
                 .issuedAt(now)
