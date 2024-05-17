@@ -34,13 +34,10 @@ public class UsersController {
 
     @PostMapping("/login")
     public String login(@RequestBody UserRequest userRequest) {
-        Optional<Users> optionalUsers = userRepository.findByUsername(userRequest.username());
-        if (optionalUsers.isPresent()) {
-            try {
-                Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(userRequest.username(), userRequest.password()));
-                return tokenService.generateToken(authentication);
-            } catch (BadCredentialsException ignored) {}
-        }
+        try {
+            Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(userRequest.username(), userRequest.password()));
+            return tokenService.generateToken(authentication);
+        } catch (BadCredentialsException ignored) {}
         // Generic error message for security
         return "Invalid username or password";
 
