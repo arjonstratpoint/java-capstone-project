@@ -5,14 +5,10 @@ import com.example.arjon.model.Users;
 import com.example.arjon.model.request.ContentRequest;
 import com.example.arjon.repository.ContentRepository;
 import com.example.arjon.repository.UserRepository;
+import com.example.arjon.util.AuthenticationFacade;
 import jakarta.validation.Valid;
-import org.springframework.data.relational.core.sql.In;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AnonymousAuthenticationToken;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -26,11 +22,11 @@ import java.util.Optional;
 public class ContentController {
 
     private final ContentRepository contentRepository;
-    private final UserRepository userRepository;
+    private final AuthenticationFacade authenticationFacade;
 
-    public ContentController(ContentRepository contentRepository, UserRepository userRepository) {
+    public ContentController(ContentRepository contentRepository, AuthenticationFacade authenticationFacade) {
         this.contentRepository = contentRepository;
-        this.userRepository = userRepository;
+        this.authenticationFacade = authenticationFacade;
     }
 
     @GetMapping
@@ -46,21 +42,15 @@ public class ContentController {
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
     public ResponseEntity<Content> create(@Valid @RequestBody ContentRequest contentRequest, UriComponentsBuilder ucb) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (!(authentication instanceof AnonymousAuthenticationToken)) {
-            Optional<Users> optionalUser = userRepository.findByUsername(authentication.getName());
-            if(optionalUser.isPresent()) {
-                Integer userId = optionalUser.get().id();
-                Content content = new Content(userId,contentRequest.title(),contentRequest.desc(),contentRequest.status(),contentRequest.contentType(),contentRequest.url());
-                Content contentSaved = contentRepository.save(content);
-                URI locationOfNewContent = ucb
-                        .path("/api/content/{id}")
-                        .buildAndExpand(contentSaved.id())
-                        .toUri();
-                return ResponseEntity.created(locationOfNewContent).body(contentSaved);
-            }
-        }
-        return ResponseEntity.noContent().build();
+        Integer userId = authenticationFacade.getUserIdFromAuthentication();
+        Content content = new Content(userId,contentRequest.title(),contentRequest.desc(),contentRequest.status(),contentRequest.contentType(),contentRequest.url());
+        Content contentSaved = contentRepository.save(content);
+        URI locationOfNewContent = ucb
+                .path("/api/content/{id}")
+                .buildAndExpand(contentSaved.id())
+                .toUri();
+        return ResponseEntity.created(locationOfNewContent).body(contentSaved);
+
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
