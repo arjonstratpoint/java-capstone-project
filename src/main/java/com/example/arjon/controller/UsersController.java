@@ -1,10 +1,15 @@
 package com.example.arjon.controller;
 
+import com.example.arjon.model.ForgotPassword;
 import com.example.arjon.model.Users;
+import com.example.arjon.model.request.ForgotPasswordValidateRequest;
 import com.example.arjon.model.request.UserRequest;
 import com.example.arjon.model.response.UserResponse;
+import com.example.arjon.repository.ForgotPasswordRepository;
 import com.example.arjon.repository.UserRepository;
 import com.example.arjon.service.TokenService;
+import com.example.arjon.util.AuthenticationFacade;
+import com.example.arjon.util.OTPForgotPassword;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,20 +21,25 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/user")
 public class UsersController {
 
     private final UserRepository userRepository;
+    private final ForgotPasswordRepository forgotPasswordRepository;
     @Autowired
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final TokenService tokenService;
 
-    public UsersController(UserRepository userRepository, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, TokenService tokenService) {
+    public UsersController(UserRepository userRepository, ForgotPasswordRepository forgotPasswordRepository, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, TokenService tokenService) {
         this.userRepository = userRepository;
+        this.forgotPasswordRepository = forgotPasswordRepository;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
         this.tokenService = tokenService;
@@ -55,5 +65,46 @@ public class UsersController {
         String encryptedPassword = passwordEncoder.encode(userRequest.password());
         Users users = new Users(userRequest.username(), encryptedPassword);
         userRepository.save(users);
+    }
+
+    @PostMapping("/forgot-password/request/{username}")
+    public String passwordResetRequest(@PathVariable String username) {
+        Optional<Users> optionalUser = userRepository.findByUsername(username);
+        if (optionalUser.isPresent()) {
+            Integer userId = optionalUser.get().id();
+            List<ForgotPassword> forgotPasswordList = forgotPasswordRepository.findByUserId(userId);
+            // Update all forgot password request of user to is_valid false
+            List<ForgotPassword> updatedForgotPasswordList = new ArrayList<>(forgotPasswordList.stream()
+                    .map(fp -> new ForgotPassword(fp.id(), fp.userId(), fp.code(), false, fp.dateCreated()))
+                    .toList());
+            String otp = OTPForgotPassword.generateOTP();
+            ForgotPassword forgotPassword = new ForgotPassword(userId, otp);
+            updatedForgotPasswordList.add(forgotPassword);
+            forgotPasswordRepository.saveAll(updatedForgotPasswordList);
+            return otp;
+        }
+        return "Generic Error";
+    }
+
+    @PostMapping("/forgot-password/validate/{username}")
+    public String passwordResetValidate(@PathVariable String username, @RequestBody ForgotPasswordValidateRequest request) {
+        Optional<Users> optionalUser = userRepository.findByUsername(username);
+        if (optionalUser.isPresent()) {
+            Users user = optionalUser.get();
+            Optional<ForgotPassword> optionalForgotPassword = forgotPasswordRepository.findByIdAndCode(user.id(), request.code());
+            if (optionalForgotPassword.isPresent()) {
+                //Update ForgotPassword table
+                ForgotPassword fp = optionalForgotPassword.get();
+                ForgotPassword forgotPassword = new ForgotPassword(fp.id(), fp.userId(), fp.code(), false, fp.dateCreated());
+                forgotPasswordRepository.save(forgotPassword);
+
+                //Update User tables password
+                String encryptedPassword = passwordEncoder.encode(request.password());
+                Users updatedPasswordUser = new Users(user.id(), user.username(), encryptedPassword, user.role(), user.dateCreated());
+                userRepository.save(updatedPasswordUser);
+                return "Password Changed";
+            }
+        }
+        return "Invalid Code";
     }
 }

@@ -18,3 +18,12 @@ CREATE TABLE IF NOT EXISTS Content (
     url VARCHAR(255),
     FOREIGN KEY (user_id) REFERENCES Users(id)
 );
+
+CREATE TABLE IF NOT EXISTS Forgot_Password (
+    id SERIAL PRIMARY KEY,
+    user_id INT,
+    code VARCHAR(20) NOT NULL,
+    is_valid BOOLEAN DEFAULT TRUE,
+    date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES Users(id)
+);
