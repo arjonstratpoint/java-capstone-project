@@ -2,6 +2,7 @@ package com.example.arjon.controller;
 
 import com.example.arjon.model.ForgotPassword;
 import com.example.arjon.model.Users;
+import com.example.arjon.model.request.ChangePasswordRequest;
 import com.example.arjon.model.request.ForgotPasswordValidateRequest;
 import com.example.arjon.model.request.UserRequest;
 import com.example.arjon.model.response.UserResponse;
@@ -13,10 +14,12 @@ import com.example.arjon.util.OTPForgotPassword;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -99,12 +102,35 @@ public class UsersController {
                 forgotPasswordRepository.save(forgotPassword);
 
                 //Update User tables password
-                String encryptedPassword = passwordEncoder.encode(request.password());
-                Users updatedPasswordUser = new Users(user.id(), user.username(), encryptedPassword, user.role(), user.dateCreated());
-                userRepository.save(updatedPasswordUser);
-                return "Password Changed";
+                updateUserPassword(user, request.password());
+                return "Password Changed for : "+ user.username();
             }
         }
         return "Invalid Code";
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping("/change-password")
+    public String changePassword(@RequestBody ChangePasswordRequest request) {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            Authentication currentAuthentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authentication.getName(), request.currentPassword()));
+            if (currentAuthentication.isAuthenticated()) {
+                Optional<Users> optionalUser = userRepository.findByUsername(authentication.getName());
+                if (optionalUser.isPresent()) {
+                    Users user = optionalUser.get();
+                    updateUserPassword(user, request.newPassword());
+                    return "Password Changed for : "+ user.username();
+                }
+            }
+        } catch (BadCredentialsException ignored) {}
+        // Generic error message for security
+        return "Invalid Credentials";
+    }
+
+    private void updateUserPassword(Users user, String password) {
+        String encryptedPassword = passwordEncoder.encode(password);
+        Users updatedPasswordUser = new Users(user.id(), user.username(), encryptedPassword, user.role(), user.dateCreated());
+        userRepository.save(updatedPasswordUser);
     }
 }
