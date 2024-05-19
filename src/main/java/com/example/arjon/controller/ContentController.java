@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
@@ -42,23 +43,16 @@ public class ContentController {
         return contentRepository.findById(userId, id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Content not found"));
     }
 
-    @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
     public ResponseEntity<Content> create(@Valid @RequestBody ContentRequest contentRequest, UriComponentsBuilder ucb) {
         Integer userId = authenticationFacade.getUserIdFromAuthentication();
         Content content = new Content(userId,contentRequest.title(),contentRequest.desc(),contentRequest.status(),contentRequest.contentType(),contentRequest.url());
         Content contentSaved = contentRepository.save(content);
-        URI locationOfNewContent = ucb
-                .path("/api/content/{id}")
-                .buildAndExpand(contentSaved.id())
-                .toUri();
-        return ResponseEntity.created(locationOfNewContent).body(contentSaved);
-
+        return entityWithLocation(contentSaved);
     }
 
-    @ResponseStatus(HttpStatus.NO_CONTENT)
     @PutMapping("/{id}")
-    public void update(@RequestBody ContentRequest contentRequest, @PathVariable Integer id) {
+    public ResponseEntity<Content> update(@Valid @RequestBody ContentRequest contentRequest, @PathVariable Integer id) {
         Integer userId = authenticationFacade.getUserIdFromAuthentication();
         Optional<Content> optionalContent = contentRepository.findById(userId, id);
         if (optionalContent.isEmpty()){
@@ -66,6 +60,7 @@ public class ContentController {
         }
         Content content = new Content(optionalContent.get(), contentRequest);
         contentRepository.save(content);
+        return entityWithLocation(content);
     }
 
     @PreAuthorize("hasAuthority('SCOPE_ADMIN')")
@@ -84,6 +79,15 @@ public class ContentController {
     public List<Content> findByStatus(@PathVariable  String status) {
         Integer userId = authenticationFacade.getUserIdFromAuthentication();
         return contentRepository.findByStatus(userId, status);
+    }
+
+    private ResponseEntity<Content> entityWithLocation(Content content) {
+        URI uri = ServletUriComponentsBuilder
+                .fromCurrentRequestUri()
+                .path("/api/content/{id}")
+                .buildAndExpand(content.id())
+                .toUri();
+        return ResponseEntity.created(uri).body(content);
     }
 
 }
