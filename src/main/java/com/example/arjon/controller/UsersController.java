@@ -29,6 +29,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 
+import static com.example.arjon.util.Constant.*;
+
 @RestController
 @RequestMapping("/api/user")
 public class UsersController {
@@ -66,7 +68,7 @@ public class UsersController {
     }
 
     @PostMapping("/forgot-password/request/{username}")
-    public String passwordResetRequest(@PathVariable String username) {
+    public ResponseEntity<String> passwordResetRequest(@PathVariable String username) {
         Optional<Users> optionalUser = userRepository.findByUsername(username);
         if (optionalUser.isPresent()) {
             Integer userId = optionalUser.get().id();
@@ -79,13 +81,13 @@ public class UsersController {
             ForgotPassword forgotPassword = new ForgotPassword(userId, otp);
             updatedForgotPasswordList.add(forgotPassword);
             forgotPasswordRepository.saveAll(updatedForgotPasswordList);
-            return otp;
+            return ResponseEntity.ok(otp);
         }
-        return "Generic Error";
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(GENERIC_AUTH_ERROR_MESSAGE);
     }
 
     @PostMapping("/forgot-password/validate/{username}")
-    public String passwordResetValidate(@PathVariable String username, @RequestBody ForgotPasswordValidateRequest request) {
+    public ResponseEntity<String> passwordResetValidate(@PathVariable String username, @RequestBody ForgotPasswordValidateRequest request) {
         Optional<Users> optionalUser = userRepository.findByUsername(username);
         if (optionalUser.isPresent()) {
             Users user = optionalUser.get();
@@ -98,15 +100,15 @@ public class UsersController {
 
                 //Update User tables password
                 updateUserPassword(user, request.password());
-                return "Password Changed for : "+ user.username();
+                return ResponseEntity.ok(String.format(FORGOT_PASSWORD_SUCCESS_MESSAGE, user.username()));
             }
         }
-        return "Invalid Code";
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(FORGOT_PASSWORD_ERROR_MESSAGE);
     }
 
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/change-password")
-    public String changePassword(@RequestBody ChangePasswordRequest request) {
+    public ResponseEntity<String> changePassword(@RequestBody ChangePasswordRequest request) {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             Authentication currentAuthentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authentication.getName(), request.currentPassword()));
@@ -115,12 +117,12 @@ public class UsersController {
                 if (optionalUser.isPresent()) {
                     Users user = optionalUser.get();
                     updateUserPassword(user, request.newPassword());
-                    return "Password Changed for : "+ user.username();
+                    return ResponseEntity.ok(String.format(FORGOT_PASSWORD_SUCCESS_MESSAGE, user.username()));
                 }
             }
         } catch (BadCredentialsException ignored) {}
         // Generic error message for security
-        return "Invalid Credentials";
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(FORGOT_PASSWORD_ERROR_MESSAGE);
     }
 
     @PreAuthorize("hasAuthority('SCOPE_ADMIN')")
@@ -145,6 +147,6 @@ public class UsersController {
 
     @ExceptionHandler({DataIntegrityViolationException.class, BadCredentialsException.class})
     public ResponseEntity handleValidationExceptions(Exception ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse("Invalid username or password"));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(GENERIC_AUTH_ERROR_MESSAGE));
     }
 }
