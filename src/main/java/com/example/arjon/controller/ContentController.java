@@ -58,11 +58,13 @@ public class ContentController {
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PutMapping("/{id}")
-    public void update(@RequestBody Content content, @PathVariable Integer id) {
-        if (!contentRepository.existsById(id)){
+    public void update(@RequestBody ContentRequest contentRequest, @PathVariable Integer id) {
+        Integer userId = authenticationFacade.getUserIdFromAuthentication();
+        Optional<Content> optionalContent = contentRepository.findById(userId, id);
+        if (optionalContent.isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Content not found");
         }
-
+        Content content = new Content(optionalContent.get(), contentRequest);
         contentRepository.save(content);
     }
 
