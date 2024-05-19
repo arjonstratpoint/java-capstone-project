@@ -123,6 +123,12 @@ public class UsersController {
         return "Invalid Credentials";
     }
 
+    @PreAuthorize("hasAuthority('SCOPE_ADMIN')")
+    @GetMapping("/list")
+    public Iterable<Users> usersList() {
+        return userRepository.findAll();
+    }
+
     private void updateUserPassword(Users user, String password) {
         String encryptedPassword = passwordEncoder.encode(password);
         Users updatedPasswordUser = new Users(user.id(), user.username(), encryptedPassword, user.role(), user.dateCreated());
