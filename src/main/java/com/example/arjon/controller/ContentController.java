@@ -30,7 +30,7 @@ public class ContentController {
         this.authenticationFacade = authenticationFacade;
     }
 
-    @GetMapping
+    @GetMapping("/list")
     public List<Content> findAll() {
         Integer userId = authenticationFacade.getUserIdFromAuthentication();
         return contentRepository.findAll(userId);
