@@ -34,7 +34,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 class UsersControllerTest {
 
-    private static final Logger log = LoggerFactory.getLogger(UsersControllerTest.class);
     @Autowired
     private MockMvc mvc;
 
@@ -76,9 +75,12 @@ class UsersControllerTest {
         UserResponse reseponse = mapper.readValue(responseString, UserResponse.class);
         String token = reseponse.token();
 
-        this.mvc.perform(get(userBaseUrl+"/list")
+        String list = this.mvc.perform(get(userBaseUrl+"/list")
                 .header("Authorization","Bearer "+token))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        System.out.println("loginSuccessfulAndGetUsersListTest:result = "+list);
     }
 
     @Test
