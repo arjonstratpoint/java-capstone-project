@@ -136,17 +136,4 @@ public class UsersController {
         Users updatedPasswordUser = new Users(user.id(), user.username(), encryptedPassword, user.role(), user.dateCreated());
         userRepository.save(updatedPasswordUser);
     }
-
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity handleValidationExceptions(MethodArgumentNotValidException ex) {
-        FieldError error = (FieldError) ex.getBindingResult().getAllErrors().stream().findFirst().get();
-        String fieldName = error.getField();
-        String errorMessage = error.getDefaultMessage();
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(fieldName +" "+ errorMessage));
-    }
-
-    @ExceptionHandler({DataIntegrityViolationException.class, BadCredentialsException.class})
-    public ResponseEntity handleValidationExceptions(Exception ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(GENERIC_AUTH_ERROR_MESSAGE));
-    }
 }
