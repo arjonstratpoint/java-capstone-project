@@ -167,6 +167,6 @@ class UsersControllerTest {
                         .content(mapper.writeValueAsString(request))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string(FORGOT_PASSWORD_ERROR_MESSAGE));
+                .andExpect(jsonPath("$.errorMessage").value(GENERIC_AUTH_ERROR_MESSAGE));
     }
 }

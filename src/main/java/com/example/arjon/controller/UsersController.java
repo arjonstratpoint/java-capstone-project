@@ -109,18 +109,16 @@ public class UsersController {
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/change-password")
     public ResponseEntity<String> changePassword(@RequestBody ChangePasswordRequest request) {
-        try {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            Authentication currentAuthentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authentication.getName(), request.currentPassword()));
-            if (currentAuthentication.isAuthenticated()) {
-                Optional<Users> optionalUser = userRepository.findByUsername(authentication.getName());
-                if (optionalUser.isPresent()) {
-                    Users user = optionalUser.get();
-                    updateUserPassword(user, request.newPassword());
-                    return ResponseEntity.ok(String.format(FORGOT_PASSWORD_SUCCESS_MESSAGE, user.username()));
-                }
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Authentication currentAuthentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authentication.getName(), request.currentPassword()));
+        if (currentAuthentication.isAuthenticated()) {
+            Optional<Users> optionalUser = userRepository.findByUsername(authentication.getName());
+            if (optionalUser.isPresent()) {
+                Users user = optionalUser.get();
+                updateUserPassword(user, request.newPassword());
+                return ResponseEntity.ok(String.format(FORGOT_PASSWORD_SUCCESS_MESSAGE, user.username()));
             }
-        } catch (BadCredentialsException ignored) {}
+        }
         // Generic error message for security
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(FORGOT_PASSWORD_ERROR_MESSAGE);
     }
