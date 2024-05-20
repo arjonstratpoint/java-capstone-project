@@ -169,4 +169,14 @@ class UsersControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errorMessage").value(GENERIC_AUTH_ERROR_MESSAGE));
     }
+
+    @Test
+    @Transactional
+    void changePasswordErrorUnauthorized() throws Exception {
+        ChangePasswordRequest request = new ChangePasswordRequest(null, null);
+        this.mvc.perform(post(userBaseUrl+"/change-password")
+                        .content(mapper.writeValueAsString(request))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnauthorized());
+    }
 }

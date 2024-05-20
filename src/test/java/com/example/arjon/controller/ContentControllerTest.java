@@ -178,4 +178,10 @@ class ContentControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string("[]"));
     }
+
+    @Test
+    void contentUnauthorized() throws Exception{
+        this.mvc.perform(get(userBaseUrl))
+                .andExpect(status().isUnauthorized());
+    }
 }
