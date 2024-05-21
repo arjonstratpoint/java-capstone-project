@@ -33,10 +33,19 @@ To get started with this project, clone the repository and build the project usi
 - This project has a separate config properties for production `application-production.properties`
 
 
-## Postman Collection
+## API Docs
+
+### Postman
 You can use the provided Postman collection to test the API endpoints. Import the collection into Postman using the following steps:
 
 - Open Postman.
 - Click on Import in the top left corner.
 - Select the postman_collection.json file located in the root of this repository.
 - Click Import.
+
+### Swagger
+- Access this: https://app.swaggerhub.com/apis/alayosa/java-training-project/1.0.0-oas3
+
+OR
+- Run the application
+- Access this url: http://localhost:8080/swagger-ui/index.html
