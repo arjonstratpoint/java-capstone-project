@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 public record Users(
         @Id
         Integer id,
+        // Usernames are unique as defined from the database schema
         String username,
         String password,
         Roles role,

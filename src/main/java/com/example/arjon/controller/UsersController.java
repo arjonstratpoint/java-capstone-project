@@ -5,7 +5,6 @@ import com.example.arjon.model.Users;
 import com.example.arjon.model.request.ChangePasswordRequest;
 import com.example.arjon.model.request.ForgotPasswordValidateRequest;
 import com.example.arjon.model.request.UserRequest;
-import com.example.arjon.model.response.ErrorResponse;
 import com.example.arjon.model.response.UserResponse;
 import com.example.arjon.repository.ForgotPasswordRepository;
 import com.example.arjon.repository.UserRepository;
@@ -13,24 +12,24 @@ import com.example.arjon.service.TokenService;
 import com.example.arjon.util.OTPForgotPassword;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.validation.FieldError;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.*;
-
 import static com.example.arjon.util.Constant.*;
 
+/**
+ * REST API for users
+ *
+ * All users endpoints are publicly open
+ * except the change-password and users-list, annotated by @PreAuthorize
+ */
 @RestController
 @RequestMapping("/api/user")
 public class UsersController {
@@ -50,6 +49,7 @@ public class UsersController {
         this.tokenService = tokenService;
     }
 
+    // Logs in a registered user
     @PostMapping("/login")
     public ResponseEntity<UserResponse> login(@Valid @RequestBody UserRequest userRequest) {
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(userRequest.username(), userRequest.password()));
@@ -59,6 +59,7 @@ public class UsersController {
         return ResponseEntity.ok(response);
     }
 
+    // Register a new user
     @PostMapping("/registration")
     public ResponseEntity<String> registration(@Valid @RequestBody UserRequest userRequest) {
         String encryptedPassword = passwordEncoder.encode(userRequest.password());
@@ -67,6 +68,7 @@ public class UsersController {
         return ResponseEntity.ok("User registered");
     }
 
+    // Request a code for forgot password
     @PostMapping("/forgot-password/request/{username}")
     public ResponseEntity<String> passwordResetRequest(@PathVariable String username) {
         Optional<Users> optionalUser = userRepository.findByUsername(username);
@@ -86,6 +88,7 @@ public class UsersController {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(GENERIC_AUTH_ERROR_MESSAGE);
     }
 
+    // Validates the code for forgot password
     @PostMapping("/forgot-password/validate/{username}")
     public ResponseEntity<String> passwordResetValidate(@PathVariable String username, @RequestBody ForgotPasswordValidateRequest request) {
         Optional<Users> optionalUser = userRepository.findByUsername(username);
@@ -106,6 +109,7 @@ public class UsersController {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(FORGOT_PASSWORD_ERROR_MESSAGE);
     }
 
+    // Change users password
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/change-password")
     public ResponseEntity<String> changePassword(@RequestBody ChangePasswordRequest request) {
@@ -123,6 +127,7 @@ public class UsersController {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(FORGOT_PASSWORD_ERROR_MESSAGE);
     }
 
+    // Get all users list
     @PreAuthorize("hasAuthority('SCOPE_ADMIN')")
     @GetMapping("/list")
     public Iterable<Users> usersList() {
