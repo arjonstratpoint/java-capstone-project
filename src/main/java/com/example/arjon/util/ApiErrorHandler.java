@@ -12,9 +12,13 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import static com.example.arjon.util.Constant.GENERIC_AUTH_ERROR_MESSAGE;
 
+/**
+ * A generic api error handler
+ */
 @ControllerAdvice
 public class ApiErrorHandler {
 
+    // Handler for input validation errors
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Object> handleValidationExceptions(MethodArgumentNotValidException ex) {
         FieldError error = (FieldError) ex.getBindingResult().getAllErrors().stream().findFirst().get();
@@ -23,7 +27,7 @@ public class ApiErrorHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(fieldName +" "+ errorMessage));
     }
 
-
+    // Handler for jdbc schema and auth security errors
     @ExceptionHandler({DataIntegrityViolationException.class, BadCredentialsException.class})
     public ResponseEntity<Object> handleValidationExceptions(Exception ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(GENERIC_AUTH_ERROR_MESSAGE));

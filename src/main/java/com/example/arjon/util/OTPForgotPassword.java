@@ -4,6 +4,9 @@ import java.util.Random;
 
 import static com.example.arjon.util.Constant.OTP_LENGTH;
 
+/**
+ * A helper class generating code for forgot password
+ */
 public class OTPForgotPassword {
     public static String generateOTP() {
         int length = OTP_LENGTH;

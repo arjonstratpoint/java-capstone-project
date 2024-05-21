@@ -25,6 +25,17 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
+/**
+ * Config for the app's security
+ *
+ * Turning on @EnableMethodSecurity to add rbac on specific methods, but also declaring here on SecurityFilter
+ * global requestMatchers specifically for:
+ * 1. Actuator endpoints
+ * 2. Users endpoints
+ * 3. other endpoints
+ *
+ */
+
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -51,8 +62,14 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(CsrfConfigurer::disable)
                 .authorizeHttpRequests((authorize) -> authorize
+                        // 1. Actuator endpoints - only allow admins to access actuator endpoints
                         .requestMatchers(EndpointRequest.toAnyEndpoint()).hasAuthority("SCOPE_ADMIN")
+
+                        // 2. Users endpoints - permit unAuthorize request to users endpoints (login, registration and forgot-password)
+                        // but implement @PreAuthorized annotation to change-password and users-list. see UsersController class
                         .requestMatchers("/api/user/**").permitAll()
+
+                        // 3. Other endpoints should require authentication
                         .anyRequest().authenticated())
                 .oauth2ResourceServer((oauth2) -> oauth2
                         .jwt(Customizer.withDefaults()))

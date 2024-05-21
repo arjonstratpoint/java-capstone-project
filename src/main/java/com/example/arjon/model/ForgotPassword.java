@@ -4,6 +4,10 @@ import org.springframework.data.annotation.Id;
 
 import java.time.LocalDateTime;
 
+/**
+ * The ForgotPassword entity
+ *
+ */
 public record ForgotPassword(
         @Id
         Integer id,
@@ -12,15 +16,13 @@ public record ForgotPassword(
         Boolean isValid,
         LocalDateTime dateCreated
 ) {
+    // Used for creating a forgot password request
     public ForgotPassword(Integer userId, String code) {
         this(null, userId, code, true, LocalDateTime.now());
     }
 
-    public ForgotPassword(Integer id, Integer userId, String code, Boolean isValid, LocalDateTime dateCreated) {
-        this.id = id;
-        this.userId = userId;
-        this.code = code;
-        this.isValid = isValid;
-        this.dateCreated = dateCreated;
+    // Used for updating existing forgot password requests
+    public ForgotPassword(ForgotPassword fp) {
+        this(fp.id(), fp.userId(), fp.code(), false, fp.dateCreated());
     }
 }

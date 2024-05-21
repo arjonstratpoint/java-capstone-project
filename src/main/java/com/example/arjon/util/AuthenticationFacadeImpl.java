@@ -8,6 +8,9 @@ import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 
+/**
+ * A helper class for getting the authenticated userId from SecurityContext
+ */
 @Component
 public class AuthenticationFacadeImpl implements AuthenticationFacade{
 

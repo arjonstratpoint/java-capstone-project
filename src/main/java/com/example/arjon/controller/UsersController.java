@@ -75,7 +75,7 @@ public class UsersController {
             List<ForgotPassword> forgotPasswordList = forgotPasswordRepository.findByUserId(userId);
             // Update all forgot password request of user to is_valid false
             List<ForgotPassword> updatedForgotPasswordList = new ArrayList<>(forgotPasswordList.stream()
-                    .map(fp -> new ForgotPassword(fp.id(), fp.userId(), fp.code(), false, fp.dateCreated()))
+                    .map(ForgotPassword::new)
                     .toList());
             String otp = OTPForgotPassword.generateOTP();
             ForgotPassword forgotPassword = new ForgotPassword(userId, otp);
@@ -95,7 +95,7 @@ public class UsersController {
             if (optionalForgotPassword.isPresent()) {
                 //Update ForgotPassword table
                 ForgotPassword fp = optionalForgotPassword.get();
-                ForgotPassword forgotPassword = new ForgotPassword(fp.id(), fp.userId(), fp.code(), false, fp.dateCreated());
+                ForgotPassword forgotPassword = new ForgotPassword(fp);
                 forgotPasswordRepository.save(forgotPassword);
 
                 //Update User tables password
