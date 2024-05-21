@@ -69,6 +69,10 @@ public class SecurityConfig {
                         // but implement @PreAuthorized annotation to change-password and users-list. see UsersController class
                         .requestMatchers("/api/user/**").permitAll()
 
+                        // Allow access to api docs
+                        .requestMatchers("/v3/api-docs/**").permitAll()
+                        .requestMatchers("/swagger-ui/**").permitAll()
+
                         // 3. Other endpoints should require authentication
                         .anyRequest().authenticated())
                 .oauth2ResourceServer((oauth2) -> oauth2
