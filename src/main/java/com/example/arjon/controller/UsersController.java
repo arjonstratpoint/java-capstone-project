@@ -9,6 +9,7 @@ import com.example.arjon.model.response.UserResponse;
 import com.example.arjon.repository.ForgotPasswordRepository;
 import com.example.arjon.repository.UserRepository;
 import com.example.arjon.service.TokenService;
+import com.example.arjon.service.UserPasswordService;
 import com.example.arjon.util.OTPForgotPassword;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,18 +36,18 @@ import static com.example.arjon.util.Constant.*;
 public class UsersController {
 
     private final UserRepository userRepository;
-    private final ForgotPasswordRepository forgotPasswordRepository;
     @Autowired
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final TokenService tokenService;
+    private final UserPasswordService userPasswordService;
 
-    public UsersController(UserRepository userRepository, ForgotPasswordRepository forgotPasswordRepository, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, TokenService tokenService) {
+    public UsersController(UserRepository userRepository, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, TokenService tokenService, UserPasswordService userPasswordService) {
         this.userRepository = userRepository;
-        this.forgotPasswordRepository = forgotPasswordRepository;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
         this.tokenService = tokenService;
+        this.userPasswordService = userPasswordService;
     }
 
     // Logs in a registered user
@@ -71,42 +72,22 @@ public class UsersController {
     // Request a code for forgot password
     @PostMapping("/forgot-password/request/{username}")
     public ResponseEntity<String> passwordResetRequest(@PathVariable String username) {
-        Optional<Users> optionalUser = userRepository.findByUsername(username);
-        if (optionalUser.isPresent()) {
-            Integer userId = optionalUser.get().id();
-            List<ForgotPassword> forgotPasswordList = forgotPasswordRepository.findByUserId(userId);
-            // Update all forgot password request of user to is_valid false
-            List<ForgotPassword> updatedForgotPasswordList = new ArrayList<>(forgotPasswordList.stream()
-                    .map(ForgotPassword::new)
-                    .toList());
-            String otp = OTPForgotPassword.generateOTP();
-            ForgotPassword forgotPassword = new ForgotPassword(userId, otp);
-            updatedForgotPasswordList.add(forgotPassword);
-            forgotPasswordRepository.saveAll(updatedForgotPasswordList);
-            return ResponseEntity.ok(otp);
-        }
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(GENERIC_AUTH_ERROR_MESSAGE);
+        return userRepository.findByUsername(username)
+                .map(user -> {
+                    Integer userId = user.id();
+                    String otp = userPasswordService.forgotPasswordRequest(userId);
+                    return ResponseEntity.ok(otp);
+                })
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(GENERIC_AUTH_ERROR_MESSAGE));
     }
 
     // Validates the code for forgot password
     @PostMapping("/forgot-password/validate/{username}")
     public ResponseEntity<String> passwordResetValidate(@PathVariable String username, @RequestBody ForgotPasswordValidateRequest request) {
-        Optional<Users> optionalUser = userRepository.findByUsername(username);
-        if (optionalUser.isPresent()) {
-            Users user = optionalUser.get();
-            Optional<ForgotPassword> optionalForgotPassword = forgotPasswordRepository.findByIdAndCode(user.id(), request.code());
-            if (optionalForgotPassword.isPresent()) {
-                //Update ForgotPassword table
-                ForgotPassword fp = optionalForgotPassword.get();
-                ForgotPassword forgotPassword = new ForgotPassword(fp);
-                forgotPasswordRepository.save(forgotPassword);
-
-                //Update User tables password
-                updateUserPassword(user, request.password());
-                return ResponseEntity.ok(String.format(FORGOT_PASSWORD_SUCCESS_MESSAGE, user.username()));
-            }
-        }
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(FORGOT_PASSWORD_ERROR_MESSAGE);
+        return userRepository.findByUsername(username)
+                .filter(user -> userPasswordService.forgotPasswordValidation(user, request))
+                .map(user -> ResponseEntity.ok(String.format(FORGOT_PASSWORD_SUCCESS_MESSAGE, user.username())))
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(FORGOT_PASSWORD_ERROR_MESSAGE));
     }
 
     // Change users password
@@ -115,16 +96,13 @@ public class UsersController {
     public ResponseEntity<String> changePassword(@RequestBody ChangePasswordRequest request) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Authentication currentAuthentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authentication.getName(), request.currentPassword()));
-        if (currentAuthentication.isAuthenticated()) {
-            Optional<Users> optionalUser = userRepository.findByUsername(authentication.getName());
-            if (optionalUser.isPresent()) {
-                Users user = optionalUser.get();
-                updateUserPassword(user, request.newPassword());
-                return ResponseEntity.ok(String.format(FORGOT_PASSWORD_SUCCESS_MESSAGE, user.username()));
-            }
-        }
-        // Generic error message for security
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(FORGOT_PASSWORD_ERROR_MESSAGE);
+        return userRepository.findByUsername(authentication.getName())
+                .filter(user -> currentAuthentication.isAuthenticated())
+                .map(user -> {
+                    userPasswordService.updateUserPassword(user, request.newPassword());
+                    return ResponseEntity.ok(String.format(FORGOT_PASSWORD_SUCCESS_MESSAGE, user.username()));
+                })
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(FORGOT_PASSWORD_ERROR_MESSAGE));
     }
 
     // Get all users list
@@ -132,11 +110,5 @@ public class UsersController {
     @GetMapping("/list")
     public Iterable<Users> usersList() {
         return userRepository.findAll();
-    }
-
-    private void updateUserPassword(Users user, String password) {
-        String encryptedPassword = passwordEncoder.encode(password);
-        Users updatedPasswordUser = new Users(user.id(), user.username(), encryptedPassword, user.role(), user.dateCreated());
-        userRepository.save(updatedPasswordUser);
     }
 }
