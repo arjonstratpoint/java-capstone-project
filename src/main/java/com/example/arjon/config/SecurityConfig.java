@@ -58,6 +58,7 @@ public class SecurityConfig {
         return new NimbusJwtEncoder(jwks);
     }
 
+    // TODO-04: Enable CORS
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(CsrfConfigurer::disable)

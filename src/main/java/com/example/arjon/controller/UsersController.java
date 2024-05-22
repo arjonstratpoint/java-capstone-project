@@ -50,6 +50,8 @@ public class UsersController {
         this.userPasswordService = userPasswordService;
     }
 
+    // TODO-01: Rate limiter
+    // TODO-03: Refresh token
     // Logs in a registered user
     @PostMapping("/login")
     public ResponseEntity<UserResponse> login(@Valid @RequestBody UserRequest userRequest) {
@@ -81,6 +83,7 @@ public class UsersController {
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(GENERIC_AUTH_ERROR_MESSAGE));
     }
 
+    // TODO-02: Reset token on success change password
     // Validates the code for forgot password
     @PostMapping("/forgot-password/validate/{username}")
     public ResponseEntity<String> passwordResetValidate(@PathVariable String username, @Valid @RequestBody ForgotPasswordValidateRequest request) {
