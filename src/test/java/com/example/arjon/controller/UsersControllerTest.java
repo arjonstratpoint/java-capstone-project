@@ -45,7 +45,7 @@ class UsersControllerTest {
     @Test
     @Transactional
     void registrationSuccessful() throws Exception {
-        UserRequest request = new UserRequest("newUser", "newUser");
+        UserRequest request = new UserRequest("newUser", "newUser01");
         this.mvc.perform(post(userBaseUrl+"/registration")
                         .content(mapper.writeValueAsString(request))
                         .contentType(MediaType.APPLICATION_JSON))
@@ -54,7 +54,7 @@ class UsersControllerTest {
     }
     @Test
     void registrationErrorExistingUser() throws Exception {
-        UserRequest request = new UserRequest("admin", "admin");
+        UserRequest request = new UserRequest("admin", "pwdadmin01");
         this.mvc.perform(post(userBaseUrl+"/registration")
                         .content(mapper.writeValueAsString(request))
                         .contentType(MediaType.APPLICATION_JSON))
@@ -63,8 +63,18 @@ class UsersControllerTest {
     }
 
     @Test
+    void registrationErrorInvalidPassword() throws Exception {
+        UserRequest request = new UserRequest("admin", "invalidpassword");
+        this.mvc.perform(post(userBaseUrl+"/registration")
+                        .content(mapper.writeValueAsString(request))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorMessage").value("password "+INVALID_PASSWORD_ERROR_MESSAGE));
+    }
+
+    @Test
     void loginSuccessfulAndGetUsersListTest() throws Exception {
-        UserRequest request = new UserRequest("admin", "admin");
+        UserRequest request = new UserRequest("admin", "pwdadmin01");
         MvcResult result = this.mvc.perform(post(userBaseUrl+"/login")
                         .content(mapper.writeValueAsString(request))
                         .contentType(MediaType.APPLICATION_JSON))
@@ -85,7 +95,7 @@ class UsersControllerTest {
 
     @Test
     void loginErrorInvalidUsernameOrPassword() throws Exception {
-        UserRequest request = new UserRequest("invalid", "invalid");
+        UserRequest request = new UserRequest("invalid", "pwdinvalid01");
         this.mvc.perform(post(userBaseUrl+"/login")
                         .content(mapper.writeValueAsString(request))
                         .contentType(MediaType.APPLICATION_JSON))
@@ -144,10 +154,10 @@ class UsersControllerTest {
 
     @Test
     @Transactional
-    @WithMockUser(username = "user", password = "user", authorities = "SCOPE_USER")
+    @WithMockUser(username = "user", password = "pwduser01", authorities = "SCOPE_USER")
     void changePasswordSuccess() throws Exception {
-        String currentPassword = "user";
-        String newPassword = "newPassword";
+        String currentPassword = "pwduser01";
+        String newPassword = "pwduser02";
         ChangePasswordRequest request = new ChangePasswordRequest(currentPassword, newPassword);
         this.mvc.perform(post(userBaseUrl+"/change-password")
                         .content(mapper.writeValueAsString(request))
