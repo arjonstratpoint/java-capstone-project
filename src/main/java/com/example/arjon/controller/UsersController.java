@@ -83,7 +83,7 @@ public class UsersController {
 
     // Validates the code for forgot password
     @PostMapping("/forgot-password/validate/{username}")
-    public ResponseEntity<String> passwordResetValidate(@PathVariable String username, @RequestBody ForgotPasswordValidateRequest request) {
+    public ResponseEntity<String> passwordResetValidate(@PathVariable String username, @Valid @RequestBody ForgotPasswordValidateRequest request) {
         return userRepository.findByUsername(username)
                 .filter(user -> userPasswordService.forgotPasswordValidation(user, request))
                 .map(user -> ResponseEntity.ok(String.format(FORGOT_PASSWORD_SUCCESS_MESSAGE, user.username())))
@@ -93,7 +93,7 @@ public class UsersController {
     // Change users password
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/change-password")
-    public ResponseEntity<String> changePassword(@RequestBody ChangePasswordRequest request) {
+    public ResponseEntity<String> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Authentication currentAuthentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authentication.getName(), request.currentPassword()));
         return userRepository.findByUsername(authentication.getName())

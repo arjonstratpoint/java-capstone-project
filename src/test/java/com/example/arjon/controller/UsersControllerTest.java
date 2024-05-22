@@ -130,7 +130,7 @@ class UsersControllerTest {
                 .andExpect(content().string(hasLength(OTP_LENGTH)))
                 .andReturn().getResponse().getContentAsString();
 
-        String newPassword = "newPassword";
+        String newPassword = "userpassword01";
         ForgotPasswordValidateRequest request = new ForgotPasswordValidateRequest(code, newPassword);
         this.mvc.perform(post(userBaseUrl+"/forgot-password/validate/"+user)
                         .content(mapper.writeValueAsString(request))
@@ -143,7 +143,7 @@ class UsersControllerTest {
     @Transactional
     void forgotPasswordValidationErrorInvalidCode() throws Exception {
         String user = "user";
-        String newPassword = "newPassword";
+        String newPassword = "userpassword01";
         ForgotPasswordValidateRequest request = new ForgotPasswordValidateRequest("invalidCode", newPassword);
         this.mvc.perform(post(userBaseUrl+"/forgot-password/validate/"+user)
                         .content(mapper.writeValueAsString(request))
@@ -170,8 +170,8 @@ class UsersControllerTest {
     @Transactional
     @WithMockUser(username = "user", password = "user", authorities = "SCOPE_USER")
     void changePasswordErrorInvalidCurrentPassword() throws Exception {
-        String currentPassword = "wrongPassword";
-        String newPassword = "newPassword";
+        String currentPassword = "wrongPassword01";
+        String newPassword = "userpassword01";
         ChangePasswordRequest request = new ChangePasswordRequest(currentPassword, newPassword);
         this.mvc.perform(post(userBaseUrl+"/change-password")
                         .content(mapper.writeValueAsString(request))
@@ -183,7 +183,7 @@ class UsersControllerTest {
     @Test
     @Transactional
     void changePasswordErrorUnauthorized() throws Exception {
-        ChangePasswordRequest request = new ChangePasswordRequest(null, null);
+        ChangePasswordRequest request = new ChangePasswordRequest("userpassword01", "userpassword01");
         this.mvc.perform(post(userBaseUrl+"/change-password")
                         .content(mapper.writeValueAsString(request))
                         .contentType(MediaType.APPLICATION_JSON))
